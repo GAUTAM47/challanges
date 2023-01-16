@@ -1,0 +1,15 @@
+{
+    "companyShortName": "contos",
+    "jumpVm": "jumpVM",
+    "virtualMachine": "vm",
+    "availablitySets": "as",
+    "webTier": "web-tier",
+    "applicationTier": "app-tier",
+    "databaseTier": "db-tier",
+    "virtualNetwork": "vnet",
+    "networkSecurityGroup": "nsg",
+    "networkInterface": "nis",
+    "publicIP": "public-ip",
+    "loadBalancerPublic": "lb-public",
+    "loadBalancerInternal": "lb-internal"
+}

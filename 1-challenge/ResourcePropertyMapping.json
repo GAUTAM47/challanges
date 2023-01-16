@@ -1,0 +1,24 @@
+{
+    "storage":{
+        "dev":{
+            "kind": "StorageV2",
+            "properties":{
+                "accessTier": "HOT",
+                "minimumTlsVersion": "TLS1_2"
+            },
+            "sku":{
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            }
+
+        }
+    },
+    "publicip":{
+        "dev": {
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            }
+        }
+    }
+}

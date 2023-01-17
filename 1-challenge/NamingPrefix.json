@@ -8,7 +8,7 @@
     "databaseTier": "db-tier",
     "virtualNetwork": "vnet",
     "networkSecurityGroup": "nsg",
-    "networkInterface": "nis",
+    "networkInterface": "nic",
     "publicIP": "public-ip",
     "loadBalancerPublic": "lb-public",
     "loadBalancerInternal": "lb-internal"

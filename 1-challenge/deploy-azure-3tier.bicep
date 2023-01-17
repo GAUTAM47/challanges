@@ -103,7 +103,7 @@ resource pubip_jumpvm 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   properties: {
     ipAddress: '40.121.64.90'
     publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Dynamic'
+    publicIPAllocationMethod: 'Static'
     idleTimeoutInMinutes: 4
     ipTags: []
   }
@@ -250,7 +250,7 @@ resource lb_inter 'Microsoft.Network/loadBalancers@2021-08-01' = {
         name: 'fronted-ip-internallb'
         properties:{
           privateIPAddress: '10.0.7.6'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet:{
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'app-tier-subnet')
           }
@@ -406,7 +406,7 @@ resource nisdb001 'Microsoft.Network/networkInterfaces@2022-07-01' = {
         name: 'ipconfiguration001'
         properties: {
           privateIPAddress: '10.0.13.4'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'db-tier-subnet')
           }
@@ -436,7 +436,7 @@ resource nisdb002 'Microsoft.Network/networkInterfaces@2022-07-01' = {
         name: 'ipconfiguration001'
         properties: {
           privateIPAddress: '10.0.13.5'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'db-tier-subnet')
           }
@@ -466,7 +466,7 @@ resource nisapp001 'Microsoft.Network/networkInterfaces@2022-07-01' = {
         name: 'ipconfiguration001'
         properties: {
           privateIPAddress: '10.0.7.4'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'app-tier-subnet')
           }
@@ -501,7 +501,7 @@ resource nisapp002 'Microsoft.Network/networkInterfaces@2022-07-01' = {
         name: 'ipconfiguration001'
         properties: {
           privateIPAddress: '10.0.7.5'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'app-tier-subnet')
           }
@@ -536,17 +536,15 @@ resource nisjumpvm 'Microsoft.Network/networkInterfaces@2022-07-01' = {
         name: 'ipconfiguration001'
         properties: {
           privateIPAddress: '10.0.0.4'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
+          publicIPAddress: {
+            id: resourceId('Microsoft.Network/publicIPAddressess', pub_ip_jump_vm)
+          }
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'app-tier-subnet')
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'jump-subnet')
           }
           primary: true
           privateIPAddressVersion: 'IPv4'
-          loadBalancerBackendAddressPools: [
-            {
-              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lb_internal, 'apptierbackend')
-            }
-          ]
         }
       }
     ]
@@ -571,7 +569,7 @@ resource nisweb001 'Microsoft.Network/networkInterfaces@2022-07-01' = {
         name: 'ipconfiguration001'
         properties: {
           privateIPAddress: '10.0.1.4'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'web-tier-subnet')
           }
@@ -606,7 +604,7 @@ resource nisweb002 'Microsoft.Network/networkInterfaces@2022-07-01' = {
         name: 'ipconfiguration001'
         properties: {
           privateIPAddress: '10.0.1.5'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet, 'web-tier-subnet')
           }

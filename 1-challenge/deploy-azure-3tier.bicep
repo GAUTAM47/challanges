@@ -215,7 +215,7 @@ resource lb_app_backend 'Microsoft.Network/loadBalancers/backendAddressPools@202
 
 //Creating load balancer backend pool - web-tier-backend
 resource lb_web_backend 'Microsoft.Network/loadBalancers/backendAddressPools@2022-07-01' = {
-  name: concat(lb_internal,'/webtierbackend')
+  name: concat(lb_public,'/webtierbackend')
   dependsOn:[
     lb
   ]
@@ -647,7 +647,7 @@ resource subnet_app 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
 resource subnet_db 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
   name: concat(vnet, '/db-tier-subnet')
   dependsOn: [
-    vn, nsg_app
+    vn, nsg_db
   ]
   properties: {
     addressPrefix: '10.0.13.0/24'
@@ -660,11 +660,11 @@ resource subnet_db 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
   }
 }
 
-//Creating subnet db tier - subnet_jump
+//Creating subnet jump tier - subnet_jump
 resource subnet_jumo 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
   name: concat(vnet, '/jump-subnet')
   dependsOn: [
-    vn, nsg_app
+    vn, nsg_jump
   ]
   properties: {
     addressPrefix: '10.0.0.0/24'
@@ -677,11 +677,11 @@ resource subnet_jumo 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
   }
 }
 
-//Creating subnet db tier - subnet_web
+//Creating subnet web tier - subnet_web
 resource subnet_web 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
   name: concat(vnet, '/web-tier-subnet')
   dependsOn: [
-    vn, nsg_app
+    vn, nsg_web
   ]
   properties: {
     addressPrefix: '10.0.1.0/24'
@@ -726,7 +726,7 @@ resource vm_jump 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       dataDisks: []
     }
     osProfile:{
-      computerName: vm_app_1
+      computerName: jumpVM
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration:{
@@ -790,7 +790,7 @@ resource app_vm_01 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       dataDisks: []
     }
     osProfile:{
-      computerName: jumpVM
+      computerName: vm_app_1
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration:{
@@ -854,7 +854,7 @@ resource app_vm_02 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       dataDisks: []
     }
     osProfile:{
-      computerName: jumpVM
+      computerName: vm_app_2
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration:{
@@ -918,7 +918,7 @@ resource db_vm_01 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       dataDisks: []
     }
     osProfile:{
-      computerName: jumpVM
+      computerName: vm_db_1
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration:{
@@ -982,7 +982,7 @@ resource db_vm_02 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       dataDisks: []
     }
     osProfile:{
-      computerName: jumpVM
+      computerName: vm_db_2
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration:{
@@ -1046,7 +1046,7 @@ resource web_vm_01 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       dataDisks: []
     }
     osProfile:{
-      computerName: jumpVM
+      computerName: vm_web_1
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration:{
@@ -1110,7 +1110,7 @@ resource web_vm_02 'Microsoft.Compute/virtualMachines@2021-03-01' = {
       dataDisks: []
     }
     osProfile:{
-      computerName: jumpVM
+      computerName: vm_web_2
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration:{

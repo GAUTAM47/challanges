@@ -13,6 +13,7 @@ param adminPassword string
 
 var prefix = json(loadTextContent('NamingPrefix.json'))
 var pub_ip_props = json(loadTextContent('ResourcePropertyMapping.json'))['publicip']['${param_env}']
+var vmSizeProps = json(loadTextContent('ResourcePropertyMapping.json'))['vm']['${param_env}']
 
 var vnet = '${prefix.virtualNetwork}-${prefix.companyShortName}-${param_Usage}-${param_env}'
 var jumpVM = '${prefix.jumpVm}-${prefix.companyShortName}-${param_Usage}-${param_env}'
@@ -41,92 +42,9 @@ var nis_app_tier_002 = '${prefix.networkInterface}-${prefix.companyShortName}-${
 var nis_web_tier_001 = '${prefix.networkInterface}-${prefix.companyShortName}-${prefix.webTier}-${param001}'
 var nis_web_tier_002 = '${prefix.networkInterface}-${prefix.companyShortName}-${prefix.webTier}-${param002}'
 
-//Creating network security group
-resource nsg_app 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
-  name: nsg_app_tier
-  location: location
-  properties: {
-    securityRules: []
-  }
-}
-
-resource nsg_db 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
-  name: nsg_db_tier
-  location: location
-  properties: {
-    securityRules: []
-  }
-}
-
-resource nsg_web 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
-  name: nsg_web_tier
-  location: location
-  properties: {
-    securityRules: []
-  }
-}
-
-resource nsg_jump 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
-  name: nsg_jump_vm
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'Port_8080'
-        properties:{
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '3389'
-          sourceAddressPrefix: '49.37.167.48'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 100
-          direction: 'Inbound'
-          sourcePortRanges: []
-          destinationPortRanges: []
-          sourceAddressPrefixes: []
-          destinationAddressPrefixes: []
-        }
-      }
-    ]
-  }
-}
-
-//creating public ip
-resource pubip_jumpvm 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
-  name: pub_ip_jump_vm
-  location: location
-  sku: {
-    name: pub_ip_props.sku.name
-    tier: pub_ip_props.sku.tier
-  }
-  properties: {
-    ipAddress: '40.121.64.90'
-    publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Static'
-    idleTimeoutInMinutes: 4
-    ipTags: []
-  }
-}
-
-resource pub_ip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
-  name: public_ip
-  location: location
-  sku: {
-    name: pub_ip_props.sku.name
-    tier: pub_ip_props.sku.tier
-  }
-  properties: {
-    ipAddress: '40.121.133.254'
-    publicIPAddressVersion: 'IPv4'
-    publicIPAllocationMethod: 'Static'
-    idleTimeoutInMinutes: 4
-    ipTags: []
-  }
-}
-
 //creating virtual network - vn
 resource vn 'Microsoft.Network/virtualNetworks@2021-02-01' = {
+  
   name: vnet
   location: location
   dependsOn: [
@@ -180,7 +98,7 @@ resource vn 'Microsoft.Network/virtualNetworks@2021-02-01' = {
         properties: {
           addressPrefix: '10.0.0.0/24'
           networkSecurityGroup: {
-            id: nsg_web.id
+            id: nsg_jump.id
           }
           delegations: []
           privateEndpointNetworkPolicies: 'Enabled'
@@ -193,43 +111,88 @@ resource vn 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   }
 }
 
-//Creating load balancer backend pool - app-tier-backend
-resource lb_app_backend 'Microsoft.Network/loadBalancers/backendAddressPools@2022-07-01' = {
-  name: concat(lb_internal,'/apptierbackend')
-  dependsOn:[
-    lb
-  ]
+//Creating network security group
+resource nsg_app 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
+  name: nsg_app_tier
+  location: location
   properties: {
-    loadBalancerBackendAddresses: [
+    securityRules: []
+  }
+}
+
+resource nsg_db 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
+  name: nsg_db_tier
+  location: location
+  properties: {
+    securityRules: []
+  }
+}
+
+resource nsg_web 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
+  name: nsg_web_tier
+  location: location
+  properties: {
+    securityRules: []
+  }
+}
+
+resource nsg_jump 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
+  name: nsg_jump_vm
+  location: location
+  properties: {
+    securityRules: [
       {
-        name: 'contos-app-tier-vm-001-ipconfig'
-        properties: {}
-      }
-      {
-        name: 'contos-app-tier-vm-002-ipconfig'
-        properties: {}
+        name: 'Port_8080'
+        properties:{
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3389'
+          sourceAddressPrefix: '49.37.167.48'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+          sourcePortRanges: []
+          destinationPortRanges: []
+          sourceAddressPrefixes: []
+          destinationAddressPrefixes: []
+        }
       }
     ]
   }
 }
 
-//Creating load balancer backend pool - web-tier-backend
-resource lb_web_backend 'Microsoft.Network/loadBalancers/backendAddressPools@2022-07-01' = {
-  name: concat(lb_public,'/webtierbackend')
-  dependsOn:[
-    lb
-  ]
+//creating public ip for jump server
+resource pubip_jumpvm 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: pub_ip_jump_vm
+  location: location
+  sku: {
+    name: pub_ip_props.sku.name
+    tier: pub_ip_props.sku.tier
+  }
   properties: {
-    loadBalancerBackendAddresses: [
-      {
-        name: 'contos-web-tier-vm-001-ipconfig'
-        properties: {}
-      }
-      {
-        name: 'contos-web-tier-vm-002-ipconfig'
-        properties: {}
-      }
-    ]
+    ipAddress: '40.121.64.90'
+    publicIPAddressVersion: 'IPv4'
+    publicIPAllocationMethod: 'Static'
+    idleTimeoutInMinutes: 4
+    ipTags: []
+  }
+}
+
+//creating public ip for external load balancer
+resource pub_ip 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: public_ip
+  location: location
+  sku: {
+    name: pub_ip_props.sku.name
+    tier: pub_ip_props.sku.tier
+  }
+  properties: {
+    ipAddress: '40.121.133.254'
+    publicIPAddressVersion: 'IPv4'
+    publicIPAllocationMethod: 'Static'
+    idleTimeoutInMinutes: 4
+    ipTags: []
   }
 }
 
@@ -256,9 +219,6 @@ resource lb_inter 'Microsoft.Network/loadBalancers@2021-08-01' = {
           }
           privateIPAddressVersion: 'IPv4'
         }
-        zones:[
-          '1','2','3'
-        ]
       }
     ]
     backendAddressPools:[
@@ -393,6 +353,49 @@ resource lb 'Microsoft.Network/loadBalancers@2021-08-01' = {
   }
 }
 
+//Creating load balancer backend pool - app-tier-backend
+resource lb_app_backend 'Microsoft.Network/loadBalancers/backendAddressPools@2022-07-01' = {
+  //name: concat(lb_internal,'/apptierbackend')
+  parent: lb_inter
+  name: 'apptierbackend'
+  dependsOn:[
+    lb
+  ]
+  properties: {
+    loadBalancerBackendAddresses: [
+      {
+        name: 'contos-app-tier-vm-001-ipconfig'
+        properties: {}
+      }
+      {
+        name: 'contos-app-tier-vm-002-ipconfig'
+        properties: {}
+      }
+    ]
+  }
+}
+
+//Creating load balancer backend pool - web-tier-backend
+resource lb_web_backend 'Microsoft.Network/loadBalancers/backendAddressPools@2022-07-01' = {
+  parent: lb
+  name: 'webtierbackend'
+  dependsOn:[
+    lb
+  ]
+  properties: {
+    loadBalancerBackendAddresses: [
+      {
+        name: 'contos-web-tier-vm-001-ipconfig'
+        properties: {}
+      }
+      {
+        name: 'contos-web-tier-vm-002-ipconfig'
+        properties: {}
+      }
+    ]
+  }
+}
+
 //creating network interface db tier - nis-db-tier-001
 resource nisdb001 'Microsoft.Network/networkInterfaces@2022-07-01' = {
   name: nis_db_tier_001
@@ -475,6 +478,7 @@ resource nisapp001 'Microsoft.Network/networkInterfaces@2022-07-01' = {
           loadBalancerBackendAddressPools: [
             {
               id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lb_internal, 'apptierbackend')
+              
             }
           ]
         }
@@ -628,14 +632,12 @@ resource nisweb002 'Microsoft.Network/networkInterfaces@2022-07-01' = {
 
 //Creating subnet app tier - subnet_app
 resource subnet_app 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
-  name: concat(vnet, '/app-tier-subnet')
-  dependsOn: [
-    vn, nsg_app
-  ]
+  parent: vn
+  name: 'app-tier-subnet'
   properties: {
     addressPrefix: '10.0.7.0/24'
     networkSecurityGroup: {
-      id: resourceId('Microsoft.Network/networkSecurityGroups', nsg_app_tier)
+      id: nsg_app.id
     }
     delegations: []
     privateEndpointNetworkPolicies: 'Enabled'
@@ -645,14 +647,12 @@ resource subnet_app 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
 
 //Creating subnet db tier - subnet_db
 resource subnet_db 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
-  name: concat(vnet, '/db-tier-subnet')
-  dependsOn: [
-    vn, nsg_db
-  ]
+  parent: vn
+  name: 'db-tier-subnet'
   properties: {
     addressPrefix: '10.0.13.0/24'
     networkSecurityGroup: {
-      id: resourceId('Microsoft.Network/networkSecurityGroups', nsg_db_tier)
+      id: nsg_db.id
     }
     delegations: []
     privateEndpointNetworkPolicies: 'Enabled'
@@ -662,14 +662,12 @@ resource subnet_db 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
 
 //Creating subnet jump tier - subnet_jump
 resource subnet_jumo 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
-  name: concat(vnet, '/jump-subnet')
-  dependsOn: [
-    vn, nsg_jump
-  ]
+  parent: vn
+  name: 'jump-subnet'
   properties: {
     addressPrefix: '10.0.0.0/24'
     networkSecurityGroup: {
-      id: resourceId('Microsoft.Network/networkSecurityGroups', nsg_jump_vm)
+      id: nsg_jump.id
     }
     delegations: []
     privateEndpointNetworkPolicies: 'Enabled'
@@ -679,14 +677,12 @@ resource subnet_jumo 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
 
 //Creating subnet web tier - subnet_web
 resource subnet_web 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
-  name: concat(vnet, '/web-tier-subnet')
-  dependsOn: [
-    vn, nsg_web
-  ]
+  parent: vn
+  name: 'web-tier-subnet'
   properties: {
     addressPrefix: '10.0.1.0/24'
     networkSecurityGroup: {
-      id: resourceId('Microsoft.Network/networkSecurityGroups', nsg_web_tier)
+      id: nsg_web.id
     }
     delegations: []
     privateEndpointNetworkPolicies: 'Enabled'
@@ -703,7 +699,7 @@ resource vm_jump 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   ]
   properties:{
     hardwareProfile:{
-      vmSize: 'Standard_DS11_v2'
+      vmSize: vmSizeProps.vmSize
     }
     storageProfile:{
       imageReference: {
@@ -767,7 +763,7 @@ resource app_vm_01 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   ]
   properties:{
     hardwareProfile:{
-      vmSize: 'Standard_DS11_v2'
+      vmSize: vmSizeProps.vmSize
     }
     storageProfile:{
       imageReference: {
@@ -827,11 +823,11 @@ resource app_vm_02 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: vm_app_2
   location: location
   dependsOn: [
-    nisapp001
+    nisapp002
   ]
   properties:{
     hardwareProfile:{
-      vmSize: 'Standard_DS11_v2'
+      vmSize: vmSizeProps.vmSize
     }
     storageProfile:{
       imageReference: {
@@ -891,11 +887,11 @@ resource db_vm_01 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: vm_db_1
   location: location
   dependsOn: [
-    nisapp001
+    nisdb001
   ]
   properties:{
     hardwareProfile:{
-      vmSize: 'Standard_DS11_v2'
+      vmSize: vmSizeProps.vmSize
     }
     storageProfile:{
       imageReference: {
@@ -955,11 +951,11 @@ resource db_vm_02 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: vm_db_1
   location: location
   dependsOn: [
-    nisapp001
+    nisdb002
   ]
   properties:{
     hardwareProfile:{
-      vmSize: 'Standard_DS11_v2'
+      vmSize: vmSizeProps.vmSize
     }
     storageProfile:{
       imageReference: {
@@ -1019,11 +1015,11 @@ resource web_vm_01 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: vm_web_1
   location: location
   dependsOn: [
-    nisapp001
+    nisweb001
   ]
   properties:{
     hardwareProfile:{
-      vmSize: 'Standard_DS11_v2'
+      vmSize: vmSizeProps.vmSize
     }
     storageProfile:{
       imageReference: {
@@ -1083,11 +1079,11 @@ resource web_vm_02 'Microsoft.Compute/virtualMachines@2021-03-01' = {
   name: vm_web_2
   location: location
   dependsOn: [
-    nisapp001
+    nisweb002
   ]
   properties:{
     hardwareProfile:{
-      vmSize: 'Standard_DS11_v2'
+      vmSize: vmSizeProps.vmSize
     }
     storageProfile:{
       imageReference: {
@@ -1144,7 +1140,8 @@ resource web_vm_02 'Microsoft.Compute/virtualMachines@2021-03-01' = {
 
 //Creating network security rules - JUMP VM
 resource net_sec_jump 'Microsoft.Network/networkSecurityGroups/securityRules@2022-07-01' = {
-  name: concat(nsg_jump_vm, '/port_8080')
+  parent: nsg_jump
+  name: 'port_8080'
   dependsOn: [
     nsg_jump
   ]
